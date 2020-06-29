@@ -12,7 +12,6 @@ require (
 	github.com/cockroachdb/cmux v0.0.0-20170110192607-30d10be49292
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.4.2
 	github.com/golang/snappy v0.0.2-0.20190904063534-ff6b7dc882cf
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/consul/api v1.5.0 // indirect

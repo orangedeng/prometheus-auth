@@ -135,8 +135,7 @@ func (a *agent) serve() error {
 		return err
 	case <-a.cfg.ctx.Done():
 		grpcProxy.GracefulStop()
-		httpProxy.Shutdown(a.cfg.ctx)
-		return nil
+		return httpProxy.Shutdown(a.cfg.ctx)
 	}
 }
 

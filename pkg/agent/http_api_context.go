@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/juju/errors"
 	promapiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -115,13 +115,13 @@ func (c *apiContext) responseMetrics(data *promgo.MetricFamily) (err error) {
 	return
 }
 
-func (c *apiContext) proxy() error {
-	c.Do(func() {
-		c.proxyHandler.ServeHTTP(c.response, c.request)
-	})
+// func (c *apiContext) proxy() error {
+// 	c.Do(func() {
+// 		c.proxyHandler.ServeHTTP(c.response, c.request)
+// 	})
 
-	return nil
-}
+// 	return nil
+// }
 
 func (c *apiContext) proxyWith(request *http.Request) error {
 	c.Do(func() {
