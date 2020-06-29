@@ -1,5 +1,3 @@
-// +build test
-
 package samples
 
 import (
@@ -10,12 +8,13 @@ import (
 	"github.com/prometheus/prometheus/pkg/labels"
 	"github.com/prometheus/prometheus/pkg/timestamp"
 	"github.com/prometheus/prometheus/promql"
+	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/prometheus/prometheus/util/stats"
 )
 
 type queryData struct {
-	ResultType promql.ValueType  `json:"resultType"`
-	Result     promql.Value      `json:"result"`
+	ResultType parser.ValueType  `json:"resultType"`
+	Result     parser.Value      `json:"result"`
 	Stats      *stats.QueryStats `json:"stats,omitempty"`
 }
 
@@ -31,7 +30,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeScalar,
+				ResultType: parser.ValueTypeScalar,
 				Result: promql.Scalar{
 					V: 2,
 					T: timestamp.FromTime(start.Add(123*time.Second + 400*time.Millisecond)),
@@ -49,7 +48,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeScalar,
+				ResultType: parser.ValueTypeScalar,
 				Result: promql.Scalar{
 					V: 0.333,
 					T: timestamp.FromTime(start.Add(123 * time.Second)),
@@ -66,7 +65,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status:    "error",
 			ErrorType: "bad_data",
-			Error:     `parse error at char 8: could not parse remaining input "][query"...`,
+			Error:     `1:8: parse error: unexpected right bracket ']'`,
 		},
 	},
 	"query - test_metric1": {
@@ -78,7 +77,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -92,7 +91,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -106,7 +105,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -120,7 +119,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -134,7 +133,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -151,7 +150,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result: promql.Matrix{
 					promql.Series{
 						Points: []promql.Point{
@@ -191,7 +190,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status:    "error",
 			ErrorType: "bad_data",
-			Error:     `parse error at char 8: could not parse remaining input "][query"...`,
+			Error:     `1:8: parse error: unexpected right bracket ']'`,
 		},
 	},
 	"query_range - invalid step": {
@@ -251,7 +250,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result:     promql.Matrix{},
 			},
 		},
@@ -268,7 +267,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result:     promql.Matrix{},
 			},
 		},
@@ -285,7 +284,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result:     promql.Matrix{},
 			},
 		},
@@ -302,7 +301,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result:     promql.Matrix{},
 			},
 		},
@@ -319,7 +318,7 @@ var NoneNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -337,7 +336,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeScalar,
+				ResultType: parser.ValueTypeScalar,
 				Result: promql.Scalar{
 					V: 2,
 					T: timestamp.FromTime(start.Add(123*time.Second + 400*time.Millisecond)),
@@ -355,7 +354,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeScalar,
+				ResultType: parser.ValueTypeScalar,
 				Result: promql.Scalar{
 					V: 0.333,
 					T: timestamp.FromTime(start.Add(123 * time.Second)),
@@ -372,7 +371,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status:    "error",
 			ErrorType: "bad_data",
-			Error:     `parse error at char 8: could not parse remaining input "][query"...`,
+			Error:     `1:8: parse error: unexpected right bracket ']'`,
 		},
 	},
 	"query - test_metric1": {
@@ -384,7 +383,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result: promql.Vector{
 					promql.Sample{
 						Metric: []labels.Label{
@@ -419,7 +418,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -433,21 +432,21 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
 	},
-	"query - test_metric1[5m]": {
+	"query - test_metric1[30s]": {
 		Endpoint: "/query",
 		Queries: url.Values{
-			"query": []string{"test_metric1[5m]"},
+			"query": []string{"test_metric1[30s]"},
 		},
 		RespCode: http.StatusOK,
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result: promql.Matrix{
 					promql.Series{
 						Points: []promql.Point{
@@ -481,7 +480,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -495,7 +494,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},
@@ -512,7 +511,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result: promql.Matrix{
 					promql.Series{
 						Points: []promql.Point{
@@ -552,7 +551,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status:    "error",
 			ErrorType: "bad_data",
-			Error:     `parse error at char 8: could not parse remaining input "][query"...`,
+			Error:     `1:8: parse error: unexpected right bracket ']'`,
 		},
 	},
 	"query_range - invalid step": {
@@ -612,7 +611,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result: promql.Matrix{
 					promql.Series{
 						Metric: []labels.Label{
@@ -651,7 +650,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result:     promql.Matrix{},
 			},
 		},
@@ -668,7 +667,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result:     promql.Matrix{},
 			},
 		},
@@ -685,7 +684,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeMatrix,
+				ResultType: parser.ValueTypeMatrix,
 				Result:     promql.Matrix{},
 			},
 		},
@@ -702,7 +701,7 @@ var SomeNamespacesTokenQueryScenarios = map[string]Scenario{
 		RespBody: &jsonResponseData{
 			Status: "success",
 			Data: &queryData{
-				ResultType: promql.ValueTypeVector,
+				ResultType: parser.ValueTypeVector,
 				Result:     promql.Vector{},
 			},
 		},

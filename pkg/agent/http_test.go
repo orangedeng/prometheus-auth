@@ -1,5 +1,3 @@
-// +build test
-
 package agent
 
 import (
@@ -25,11 +23,12 @@ import (
 	promapiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/config"
+	"github.com/prometheus/prometheus/pkg/labels"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/prometheus/prometheus/promql"
+	"github.com/prometheus/prometheus/tsdb"
 	"github.com/prometheus/prometheus/util/testutil"
 	promweb "github.com/prometheus/prometheus/web"
-	promtsdb "github.com/prometheus/tsdb"
 	"github.com/rancher/prometheus-auth/pkg/agent/samples"
 	"github.com/rancher/prometheus-auth/pkg/data"
 	"github.com/rancher/prometheus-auth/pkg/kube"
@@ -60,10 +59,9 @@ func Test_accessControl(t *testing.T) {
 
 	testutil.Ok(t, err)
 
-	db, err := promtsdb.Open(dbDir, nil, nil, nil)
+	db, err := tsdb.Open(dbDir, nil, nil, nil)
 
 	testutil.Ok(t, err)
-
 	webHandler := promweb.New(nil, &promweb.Options{
 		Context:        context.Background(),
 		ListenAddress:  ":9090",
@@ -81,16 +79,16 @@ func Test_accessControl(t *testing.T) {
 			Host:   "localhost:9090",
 			Path:   "/",
 		},
-		TSDB:    func() *promtsdb.DB { return db },
-		Version: &promweb.PrometheusVersion{},
-		Flags:   map[string]string{},
+		LocalStorage: &dbAdapter{DB: db},
+		Version:      &promweb.PrometheusVersion{},
+		Flags:        map[string]string{},
 	})
 	defer webHandler.Quit()
 
 	err = webHandler.ApplyConfig(&config.Config{
 		GlobalConfig: config.GlobalConfig{
-			ExternalLabels: model.LabelSet{
-				"prometheus": "cluster-level/test",
+			ExternalLabels: labels.Labels{
+				{Name: "prometheus", Value: "cluster-level/test"},
 			},
 		},
 	})
@@ -125,6 +123,7 @@ func Test_accessControl(t *testing.T) {
 
 		for token, tokenScenarios := range tokenScenariosMap {
 			for name, tokenScenario := range tokenScenarios {
+				println("testing", token, name)
 				req := httptest.NewRequest("GET", "http://example.org/federate?"+tokenScenario.Queries.Encode(), nil)
 				req.Header.Set(authorizationHeaderKey, fmt.Sprintf("Bearer %s", token))
 				res := httptest.NewRecorder()
@@ -135,6 +134,7 @@ func Test_accessControl(t *testing.T) {
 				if got, want := normalizeResponseBody(res.Body), tokenScenario.RespBody; got != want {
 					t.Errorf("[federate] [GET ] token %q scenario %q: got body\n%s\n, want\n%s\n", token, name, got, want)
 				}
+				println("tested", token, name)
 			}
 
 		}
@@ -152,6 +152,7 @@ func Test_accessControl(t *testing.T) {
 
 		for token, tokenScenarios := range tokenScenariosMap {
 			for name, tokenScenario := range tokenScenarios {
+				println("testing", token, name)
 				req := httptest.NewRequest("GET", "http://example.org/api/v1/label/"+tokenScenario.Params["name"]+"/values", nil)
 				req.Header.Set(authorizationHeaderKey, fmt.Sprintf("Bearer %s", token))
 				res := httptest.NewRecorder()
@@ -159,9 +160,10 @@ func Test_accessControl(t *testing.T) {
 				if got, want := res.Code, tokenScenario.RespCode; got != want {
 					t.Errorf("[label] [GET ] token %q scenario %q: got code %d, want %d", token, name, got, want)
 				}
-				if got, want := string(res.Body.Bytes()), jsonResponseBody(tokenScenario.RespBody); got != want {
+				if got, want := res.Body.String(), jsonResponseBody(tokenScenario.RespBody); got != want {
 					t.Errorf("[label] [GET ] token %q scenario %q: got body\n%s\n, want\n%s\n", token, name, got, want)
 				}
+				println("tested", token, name)
 			}
 
 		}
@@ -179,6 +181,7 @@ func Test_accessControl(t *testing.T) {
 
 		for token, tokenScenarios := range tokenScenariosMap {
 			for name, tokenScenario := range tokenScenarios {
+				println("testing", token, name)
 				// GET
 				func(tokenScenario *samples.Scenario, token string, name string) {
 					req := httptest.NewRequest("GET", "http://example.org/api/v1"+tokenScenario.Endpoint+"?"+tokenScenario.Queries.Encode(), nil)
@@ -188,7 +191,7 @@ func Test_accessControl(t *testing.T) {
 					if got, want := res.Code, tokenScenario.RespCode; got != want {
 						t.Errorf("[query] [GET ] token %q scenario %q: got code %d, want %d", token, name, got, want)
 					}
-					if got, want := string(res.Body.Bytes()), jsonResponseBody(tokenScenario.RespBody); got != want {
+					if got, want := res.Body.String(), jsonResponseBody(tokenScenario.RespBody); got != want {
 						t.Errorf("[query] [GET ] token %q scenario %q: got body\n%s\n, want\n%s\n", token, name, got, want)
 					}
 				}(&tokenScenario, token, name)
@@ -203,10 +206,11 @@ func Test_accessControl(t *testing.T) {
 					if got, want := res.Code, tokenScenario.RespCode; got != want {
 						t.Errorf("[query] [POST] token %q scenario %q: got code %d, want %d", token, name, got, want)
 					}
-					if got, want := string(res.Body.Bytes()), jsonResponseBody(tokenScenario.RespBody); got != want {
+					if got, want := res.Body.String(), jsonResponseBody(tokenScenario.RespBody); got != want {
 						t.Errorf("[query] [POST] token %q scenario %q: got body\n%s\n, want\n%s\n", token, name, got, want)
 					}
 				}(&tokenScenario, token, name)
+				println("tested", token, name)
 			}
 
 		}
@@ -224,6 +228,7 @@ func Test_accessControl(t *testing.T) {
 
 		for token, tokenScenarios := range tokenScenariosMap {
 			for name, tokenScenario := range tokenScenarios {
+				println("testing", token, name)
 				// raw -> proto request
 				protoReq := &prompb.ReadRequest{Queries: tokenScenario.PrompbQueries}
 				protoReqData, err := proto.Marshal(protoReq)
@@ -259,6 +264,7 @@ func Test_accessControl(t *testing.T) {
 				if got, want := protoRes.Results, tokenScenario.RespBody; !reflect.DeepEqual(got, want) {
 					t.Errorf("[read] [POST] token %q scenario %q: got body\n%v\n, want\n%v\n", token, name, got, want)
 				}
+				println("tested", token, name)
 			}
 
 		}
@@ -276,6 +282,7 @@ func Test_accessControl(t *testing.T) {
 
 		for token, tokenScenarios := range tokenScenariosMap {
 			for name, tokenScenario := range tokenScenarios {
+				println("testing", token, name)
 				req := httptest.NewRequest("GET", "http://example.org/api/v1/series?"+tokenScenario.Queries.Encode(), nil)
 				req.Header.Set(authorizationHeaderKey, fmt.Sprintf("Bearer %s", token))
 				res := httptest.NewRecorder()
@@ -283,9 +290,10 @@ func Test_accessControl(t *testing.T) {
 				if got, want := res.Code, tokenScenario.RespCode; got != want {
 					t.Errorf("[series] [GET] token %q scenario %q: got code %d, want %d", token, name, got, want)
 				}
-				if got, want := string(res.Body.Bytes()), jsonResponseBody(tokenScenario.RespBody); got != want {
+				if got, want := res.Body.String(), jsonResponseBody(tokenScenario.RespBody); got != want {
 					t.Errorf("[series] [GET] token %q scenario %q: got body\n%s\n, want\n%s\n", token, name, got, want)
 				}
+				println("tested", token, name)
 			}
 
 		}
@@ -348,11 +356,6 @@ func startPrometheusWebHandler(t *testing.T, webHandler *promweb.Handler) {
 	testutil.Equals(t, http.StatusOK, resp.StatusCode)
 
 	resp, err = http.Get("http://localhost:9090/version")
-
-	testutil.Ok(t, err)
-	testutil.Equals(t, http.StatusOK, resp.StatusCode)
-
-	resp, err = http.Get("http://localhost:9090/graph")
 
 	testutil.Ok(t, err)
 	testutil.Equals(t, http.StatusOK, resp.StatusCode)
@@ -442,4 +445,12 @@ func mockOwnedNamespaces() kube.Namespaces {
 			"someNamespacesToken": data.NewSet("ns-a", "ns-b"),
 		},
 	}
+}
+
+type dbAdapter struct {
+	*tsdb.DB
+}
+
+func (a *dbAdapter) Stats(statsByLabelName string) (*tsdb.Stats, error) {
+	return a.Head().Stats(statsByLabelName), nil
 }

@@ -29,7 +29,6 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.10.0
 	github.com/prometheus/prometheus v0.0.0-20200626085723-c448ada63d83
-	github.com/prometheus/tsdb v0.10.0
 	github.com/shurcooL/vfsgen v0.0.0-20200627165143-92b8a710ab6c // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/urfave/cli v1.22.4
