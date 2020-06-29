@@ -29,6 +29,7 @@ type Namespaces interface {
 }
 
 type namespaces struct {
+	ctx                        context.Context
 	subjectAccessReviewsClient clientAuthorization.SubjectAccessReviewInterface
 	reviewResultTTLCache       *cache.LRUExpireCache
 	secretIndexer              clientCache.Indexer
@@ -108,7 +109,7 @@ func (n *namespaces) validate(token string) (string, error) {
 			User: sarUser,
 		},
 	}
-	reviewResult, err := n.subjectAccessReviewsClient.Create(sar)
+	reviewResult, err := n.subjectAccessReviewsClient.Create(n.ctx, sar, meta.CreateOptions{})
 	if err != nil {
 		return "", errors.Annotatef(err, "failed to review token")
 	}
@@ -127,10 +128,10 @@ func NewNamespaces(ctx context.Context, k8sClient kubernetes.Interface) Namespac
 	sec := k8sClient.CoreV1().Secrets(meta.NamespaceAll)
 	secListWatch := &clientCache.ListWatch{
 		ListFunc: func(options meta.ListOptions) (object runtime.Object, e error) {
-			return sec.List(options)
+			return sec.List(ctx, options)
 		},
 		WatchFunc: func(options meta.ListOptions) (i watch.Interface, e error) {
-			return sec.Watch(options)
+			return sec.Watch(ctx, options)
 		},
 	}
 	secInformer := clientCache.NewSharedIndexInformer(secListWatch, &core.Secret{}, 2*time.Hour, clientCache.Indexers{byTokenIndex: secretByToken})
@@ -139,10 +140,10 @@ func NewNamespaces(ctx context.Context, k8sClient kubernetes.Interface) Namespac
 	ns := k8sClient.CoreV1().Namespaces()
 	nsListWatch := &clientCache.ListWatch{
 		ListFunc: func(options meta.ListOptions) (object runtime.Object, e error) {
-			return ns.List(options)
+			return ns.List(ctx, options)
 		},
 		WatchFunc: func(options meta.ListOptions) (i watch.Interface, e error) {
-			return ns.Watch(options)
+			return ns.Watch(ctx, options)
 		},
 	}
 	nsInformer := clientCache.NewSharedIndexInformer(nsListWatch, &core.Namespace{}, 10*time.Minute, clientCache.Indexers{byProjectIDIndex: namespaceByProjectID})
@@ -152,6 +153,7 @@ func NewNamespaces(ctx context.Context, k8sClient kubernetes.Interface) Namespac
 	go nsInformer.Run(ctx.Done())
 
 	return &namespaces{
+		ctx:                        ctx,
 		subjectAccessReviewsClient: k8sClient.AuthorizationV1().SubjectAccessReviews(),
 		reviewResultTTLCache:       cache.NewLRUExpireCache(1024),
 		secretIndexer:              secInformer.GetIndexer(),

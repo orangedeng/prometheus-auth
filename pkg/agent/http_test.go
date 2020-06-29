@@ -18,10 +18,9 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/cockroachdb/cockroach/pkg/util/httputil"
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	promapi "github.com/prometheus/client_golang/api"
 	promapiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
@@ -197,7 +196,7 @@ func Test_accessControl(t *testing.T) {
 				// POST
 				func(tokenScenario *samples.Scenario, token string, name string) {
 					req := httptest.NewRequest("POST", "http://example.org/api/v1"+tokenScenario.Endpoint, strings.NewReader(tokenScenario.Queries.Encode()))
-					req.Header.Set(httputil.ContentTypeHeader, "application/x-www-form-urlencoded")
+					req.Header.Set(contentTypeHeader, "application/x-www-form-urlencoded")
 					req.Header.Set(authorizationHeaderKey, fmt.Sprintf("Bearer %s", token))
 					res := httptest.NewRecorder()
 					httpBackend.ServeHTTP(res, req)
